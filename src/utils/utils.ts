@@ -1,4 +1,4 @@
-export function isObjectPlain(object: Object) {
+export function isObjectPlain(object: object) {
   return (
     object &&
     Object.prototype.toString.call(object) === '[object Object]' &&

@@ -8,14 +8,14 @@
         :class="STATICS.styles.input"
         placeholder="Name"
         type="text"
-        @keyup.enter="METHODS.createUser"
+        @keyup.enter="METHODS.onClickSubmit"
       />
       <input
         v-model="DATA.email"
         :class="STATICS.styles.input"
         placeholder="Email"
         type="text"
-        @keyup.enter="METHODS.createUser"
+        @keyup.enter="METHODS.onClickSubmit"
       />
       <button
         :class="STATICS.styles.submitButton"
@@ -35,7 +35,6 @@
   import { useRouter } from 'vue-router';
   import { useUserStore } from '../pinia/user';
   import { reactive } from 'vue';
-  import axios from 'axios';
   import RobotImage from '../assets/robot.png';
 
   // Composables
@@ -43,7 +42,7 @@
   const USER_STORE = useUserStore();
 
   // PINIA
-  const { setUser } = USER_STORE;
+  const { aPiniaLogin } = USER_STORE;
 
   // DATA
   const DATA = reactive({
@@ -75,21 +74,21 @@
         DATA.error = '';
         DATA.isLoading = true;
 
-        try {
-          const REQUEST_PARAMS = {
-            email: DATA.email,
-            name: DATA.name
-          };
-          const { data } = await axios.post(`${import.meta.env.VITE_API_URL}/register-user`, REQUEST_PARAMS);
+        const REQUEST_PARAMS = {
+          email: DATA.email,
+          name: DATA.name
+        };
 
-          setUser(data);
-
-          ROUTER.push('/chat');
-        } catch (error) {
-          DATA.error = 'Something went wrong, please try again';
-        } finally {
-          DATA.isLoading = false;
-        }
+        aPiniaLogin(REQUEST_PARAMS)
+          .then(() => {
+            ROUTER.push('/chat');
+          })
+          .catch((error) => {
+            DATA.error = error;
+          })
+          .finally(() => {
+            DATA.isLoading = false;
+          });
       }
     }
   };

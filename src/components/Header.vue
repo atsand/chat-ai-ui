@@ -17,7 +17,7 @@
   const USER_STORE = useUserStore();
 
   // PINIA
-  const { logout } = USER_STORE;
+  const { aPiniaLogout } = USER_STORE;
 
   // STATICS
   const STATICS = {
@@ -32,7 +32,7 @@
   // METHODS
   const METHODS = {
     onClickLogout() {
-      logout();
+      aPiniaLogout();
 
       ROUTER.push('/');
     }
