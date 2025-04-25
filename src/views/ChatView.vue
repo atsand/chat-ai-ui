@@ -65,7 +65,7 @@
         'dark:[&::-webkit-scrollbar-track]:bg-neutral-700 dark:[&::-webkit-scrollbar-thumb]:bg-neutral-500'
       ],
       messageBase: 'flex gap-2 rounded-lg p-4 max-w-xl',
-      messageContainer: ['flex flex-col gap-4 max-w-4xl mx-auto p-4'],
+      messageContainer: 'flex flex-col gap-4 max-w-4xl mx-auto p-4',
       messageContent: 'flex flex-col gap-y-4 [&_*]:whitespace-normal overflow-hidden',
       messageByRole: {
         ai: 'mr-auto bg-gray-700',
