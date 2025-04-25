@@ -8,7 +8,6 @@ export const actions = {
     return new Promise<void|string>(async (resolve, reject) => {
       try {
         const { data } = await axios.post(`${import.meta.env.VITE_API_URL}/get-messages`, requestParams);
-        console.log('in data', data)
         const FORMATTED_MESSAGES = data.messages?.flatMap((msg: ChatMessage): FormattedMessage[] => {
           return [
             {
