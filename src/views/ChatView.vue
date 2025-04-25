@@ -66,7 +66,7 @@
       ],
       messageBase: 'flex gap-2 rounded-lg p-4 max-w-xl',
       messageContainer: ['flex flex-col gap-4 max-w-4xl mx-auto p-4'],
-      messageContent: 'flex flex-col gap-y-4 [&>pre]:!whitespace-pre-wrap',
+      messageContent: 'flex flex-col gap-y-4 [&_*]:whitespace-normal overflow-hidden',
       messageByRole: {
         ai: 'mr-auto bg-gray-700',
         user: 'ml-auto bg-blue-500 flex-row-reverse'
