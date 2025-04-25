@@ -1,4 +1,5 @@
 import { useUserStore } from ".";
+import type { User } from "../../types/types";
 import axios from 'axios';
 
 export const actions = {
@@ -23,7 +24,7 @@ export const actions = {
     })
   },
 
-  aPiniaSetUser(data: object) {
+  aPiniaSetUser(data: User) {
     const USER_STORE = useUserStore();
 
     USER_STORE.$patch({

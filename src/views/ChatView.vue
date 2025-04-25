@@ -1,10 +1,38 @@
 <template>
   <div :class="STATICS.styles.wrapper">
     <Header />
-    <div :class="STATICS.styles.messageContainer">
-      <div v-for="message in gPiniaChatHistory" :class="METHODS.getMessageClass(message.role)" :key="message">
-        <img :class="STATICS.styles.image" :src="METHODS.getImageSrc(message.role)" />
-        <div v-html="METHODS.getFormattedMessage(message.content)" :class="STATICS.styles.messageContent"></div>
+    <div :class="STATICS.styles.inner">
+      <div ref="messages" :class="STATICS.styles.messageContainer">
+        <div v-for="(message, index) in gPiniaChatHistory" :class="METHODS.getMessageClass(message.role)" :key="index">
+          <img :class="STATICS.styles.image" :src="METHODS.getImageSrc(message.role)" />
+          <div v-html="METHODS.getFormattedMessage(message.content)" :class="STATICS.styles.messageContent" />
+        </div>
+        <div v-if="DATA.isGettingReply" :class="[METHODS.getMessageClass('ai'), 'w-[80%] max-w-md']">
+          <img :class="STATICS.styles.image" :src="METHODS.getImageSrc('ai')" />
+          <div :class="[STATICS.styles.messageContent, 'w-full animate-pulse']">
+            <div class="w-full h-2 rounded bg-gray-500" />
+            <div class="w-full h-2 rounded bg-gray-500" />
+          </div>
+        </div>
+      </div>
+    </div>
+    <div :class="[STATICS.styles.chatInputWrapper, { 'mx-auto mb-auto max-w-2xl': !gPiniaChatHistory.length }]">
+      <div :class="STATICS.styles.chatInputInner">
+        <input
+          v-model="DATA.chatInput"
+          :class="STATICS.styles.chatInput"
+          :placeholder="gPiniaChatHistory.length ? 'Reply to Chat AI...' : 'How can Chat AI help you?'"
+          type="text"
+          @keyup.enter="METHODS.onClickSubmit"
+        />
+        <button
+          :class="STATICS.styles.submitButton"
+          :disabled="DATA.isLoading || !DATA.chatInput"
+          type="button"
+          @click="METHODS.onClickSubmit"
+        >
+          Submit
+        </button>
       </div>
     </div>
   </div>
@@ -17,7 +45,7 @@
   import { useUserStore } from '../pinia/user';
   import { storeToRefs } from 'pinia';
   import { useRouter } from 'vue-router';
-  import { onMounted, reactive } from 'vue';
+  import { nextTick, onMounted, reactive, useTemplateRef, watch } from 'vue';
   import Header from '../components/Header.vue';
   import RobotImage from '../assets/robot.png';
   import UserImage from '../assets/user.png';
@@ -28,51 +56,97 @@
   const USER_STORE = useUserStore();
 
   // PINIA
-  const { aPiniaGetChatHistory } = CHAT_STORE;
+  const { aPiniaGetChatHistory, aPiniaSendMessage } = CHAT_STORE;
   const { gPiniaChatHistory } = storeToRefs(CHAT_STORE);
   const { gPiniaUser } = storeToRefs(USER_STORE);
 
+  // REFS
+  const REF_MESSAGES = useTemplateRef('messages');
+
   // DATA
   const DATA = reactive({
+    chatInput: '',
     error: '',
+    isGettingReply: false,
     isLoading: false
   });
 
   //STATICS
   const STATICS = {
     styles: {
+      chatInput: 'w-full p-2 bg-gray-700 text-white rounded-lg focus:outline-none',
+      chatInputInner: 'flex gap-4 p-4 my-4 mx-auto w-full rounded-lg bg-gray-800 max-w-4xl',
+      chatInputWrapper: 'w-full px-4 mt-auto',
       image: 'h-6 w-6',
-      messageBase: 'flex gap-2 rounded-lg p-4 max-w-full lg:max-w-[80%]',
-      messageContainer: 'flex flex-col gap-4 overflow-y-auto w-full mx-auto py-4 px-8 lg:px-16',
-      messageContent: 'flex flex-col gap-y-4 [&>code]:whitespace-pre-wrap',
+      inner: [
+        'overflow-y-auto ',
+        '[&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:rounded-full [&::-webkit-scrollbar-track]:bg-gray-100',
+        '[&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-gray-300',
+        'dark:[&::-webkit-scrollbar-track]:bg-neutral-700 dark:[&::-webkit-scrollbar-thumb]:bg-neutral-500'
+      ],
+      messageBase: 'flex gap-2 rounded-lg p-4 max-w-xl',
+      messageContainer: ['flex flex-col gap-4 max-w-4xl mx-auto p-4'],
+      messageContent: 'flex flex-col gap-y-4 [&>pre]:!whitespace-pre-wrap',
       messageByRole: {
         ai: 'mr-auto bg-gray-700',
         user: 'ml-auto bg-blue-500 flex-row-reverse'
       },
+      submitButton: 'rounded-lg p-2 bg-blue-500 cursor-pointer disabled:cursor-not-allowed disabled:bg-gray-500',
       wrapper: 'flex flex-col h-screen bg-gray-900 text-white'
     }
   };
 
+  // LOCAL TYPES
+  type Role = keyof typeof STATICS.styles.messageByRole;
+
   // METHODS
   const METHODS = {
-    getFormattedMessage(message) {
+    // Format message content that may have markdown
+    getFormattedMessage(message: string) {
       return marked.parse(message);
     },
 
-    getImageSrc(role) {
+    getImageSrc(role: Role) {
       return role === 'ai' ? RobotImage : UserImage;
     },
 
-    getMessageClass(role) {
+    getMessageClass(role: Role) {
       return [STATICS.styles.messageBase, STATICS.styles.messageByRole[role]];
+    },
+
+    onClickSubmit() {
+      // Make a local copy of input message to allow for clearing of input
+      const MESSAGE_COPY = String(DATA.chatInput.trim());
+
+      DATA.chatInput = '';
+
+      if (!MESSAGE_COPY || !gPiniaUser.value?.userId) {
+        return;
+      } else {
+        DATA.isGettingReply = true;
+        DATA.isLoading = true;
+
+        aPiniaSendMessage(MESSAGE_COPY)
+          .then(() => {})
+          .catch((error) => {
+            DATA.error = error;
+          })
+          .finally(() => {
+            DATA.isGettingReply = false;
+            DATA.isLoading = false;
+          });
+      }
     }
   };
 
   // Lifecycle
   onMounted(() => {
+    // If no userId, return to home page
     if (!gPiniaUser.value.userId) {
       ROUTER.push('/');
-    } else {
+    }
+    // Else, get chat history
+    else {
       const REQUEST_PARAMS = {
         userId: gPiniaUser.value?.userId
       };
@@ -86,5 +160,11 @@
           DATA.isLoading = false;
         });
     }
+  });
+
+  watch(gPiniaChatHistory, () => {
+    nextTick(() => {
+      REF_MESSAGES?.value?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+    });
   });
 </script>
