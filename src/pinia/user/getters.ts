@@ -1,11 +1,10 @@
 import { useUserStore } from ".";
 import type { User } from "../../types/types";
-import { isObjectPlain } from "../../utils/utils";
 
 export const getters = {
-  gPiniaUser: (): User | {} => {
+  gPiniaUser: (): User => {
     const USER_STORE = useUserStore();
 
-    return isObjectPlain(USER_STORE.user) ? USER_STORE.user : {};
+    return USER_STORE.user;
   }
 };
