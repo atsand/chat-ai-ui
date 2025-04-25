@@ -18,21 +18,24 @@
     </div>
     <div :class="[STATICS.styles.chatInputWrapper, { 'mx-auto mb-auto max-w-2xl': !gPiniaChatHistory.length }]">
       <div :class="STATICS.styles.chatInputInner">
-        <input
-          v-model="DATA.chatInput"
-          :class="STATICS.styles.chatInput"
-          :placeholder="gPiniaChatHistory.length ? 'Reply to Chat AI...' : 'How can Chat AI help you?'"
-          type="text"
-          @keyup.enter="METHODS.onClickSubmit"
-        />
-        <button
-          :class="STATICS.styles.submitButton"
-          :disabled="DATA.isLoading || !DATA.chatInput"
-          type="button"
-          @click="METHODS.onClickSubmit"
-        >
-          Submit
-        </button>
+        <div class="flex gap-4 w-full">
+          <input
+            v-model="DATA.chatInput"
+            :class="STATICS.styles.chatInput"
+            :placeholder="gPiniaChatHistory.length ? 'Reply to Chat AI...' : 'How can Chat AI help you?'"
+            type="text"
+            @keyup.enter="METHODS.onClickSubmit"
+          />
+          <button
+            :class="STATICS.styles.submitButton"
+            :disabled="DATA.isLoading || !DATA.chatInput"
+            type="button"
+            @click="METHODS.onClickSubmit"
+          >
+            Submit
+          </button>
+        </div>
+        <div v-if="DATA.error" :class="STATICS.styles.error">{{ DATA.error }}</div>
       </div>
     </div>
   </div>
@@ -75,8 +78,9 @@
   const STATICS = {
     styles: {
       chatInput: 'w-full p-2 bg-gray-700 text-white rounded-lg focus:outline-none',
-      chatInputInner: 'flex gap-4 p-4 my-4 mx-auto w-full rounded-lg bg-gray-800 max-w-4xl',
+      chatInputInner: 'flex flex-col gap-2 p-4 my-4 mx-auto w-full rounded-lg bg-gray-800 max-w-4xl',
       chatInputWrapper: 'w-full px-4 mt-auto',
+      error: 'text-red-400 text-sm text-center',
       image: 'h-6 w-6',
       inner: [
         'overflow-y-auto ',
